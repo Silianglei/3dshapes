@@ -7,18 +7,19 @@ from matrix import *
   # height and depth dimensions.
   # ====================
 def add_box( points, x, y, z, width, height, depth ):
-    points.append([x,y,z,1])
-    points.append([x + width,y,z,1])
-    points.append([x + width,y,z + depth,1])
-    points.append([x,y,z + depth,1])
-    points.append([x,y - height,z,1])
-    points.append([x + width,y - height,z,1])
-    points.append([x,y,z + depth,1])
-    points.append([x + width,y,z + depth,1])
-    points.append([x,y - height,z + depth,1])
-    points.append([x + width,y - height,z + depth,1])
-    points.append([x,y - height,z - depth,1])
-    points.append([x + width,y - height,z - depth,1])
+    add_edge(points, x, y, z, x, y, z - depth)
+    add_edge(points, x, y, z - depth, x + width, y, z - depth)
+    add_edge(points, x + width, y, z - depth, x + width, y, z)
+    add_edge(points, x, y, z, x + width, y, z)
+    add_edge(points, x, y - height, z, x, y - height, z - depth)
+    add_edge(points, x, y - height, z - depth, x + width, y - height, z - depth)
+    add_edge(points, x + width, y - height, z - depth, x + width, y - height, z)
+    add_edge(points, x, y - height, z, x + width, y - height, z)
+    add_edge(points, x, y, z, x, y - height, z)
+    add_edge(points, x + width, y, z, x + width, y - height, z)
+    add_edge(points, x, y, z - depth, x, y - height, z - depth)
+    add_edge(points, x + width, y, z - depth, x + width, y - height, z - depth)
+
   # ====================
   # Generates all the points along the surface
   # of a sphere with center (cx, cy, cz) and
@@ -26,7 +27,18 @@ def add_box( points, x, y, z, width, height, depth ):
   # Returns a matrix of those points
   # ====================
 def generate_sphere( points, cx, cy, cz, r, step ):
-    pass
+    sphere = []
+    rot = 0
+    while rot <= 1:
+        circ = 0
+        while circ <= 1:
+            x = r * math.cos(math.pi * circ) + cx
+            y = r * math.sin(math.pi * circ) * math.cos(2 * math.pi * rot) + cy
+            z = r * math.sin(math.pi * circ) * math.sin(2 * math.pi * rot) + cz
+            add_point(sphere, x, y, z)
+            circ += step
+        rot += step
+    return sphere
 
   # ====================
   # adds all the points for a sphere with center
@@ -35,7 +47,9 @@ def generate_sphere( points, cx, cy, cz, r, step ):
   # necessary points
   # ====================
 def add_sphere( points, cx, cy, cz, r, step ):
-    pass
+    sphere = generate_sphere(points, cx, cy, cz, r, step)
+    for column in sphere:
+        add_edge(points, column[0], column[1], column[2], column[0]+1, column[1]+1, column[2]+1)
 
 
   # ====================
@@ -45,7 +59,19 @@ def add_sphere( points, cx, cy, cz, r, step ):
   # Returns a matrix of those points
   # ====================
 def generate_torus( points, cx, cy, cz, r0, r1, step ):
-    pass
+    torus = []
+    phi = 0
+    while phi < 2 * math.pi:
+        theta = 0
+        while theta < 2 * math.pi:
+            x = r0 * math.cos(phi) * math.cos(theta) + r1 * math.cos(phi) + cx
+            y = r0 * math.sin(theta) + cy
+            z = -1 * r0 * math.cos(theta) * math.sin(phi) - r1 * math.sin(phi) + cz
+            add_point(torus, x, y, z)
+            theta += step
+        phi += step
+    return torus
+
 
   # ====================
   # adds all the points for a torus with center
@@ -54,9 +80,9 @@ def generate_torus( points, cx, cy, cz, r0, r1, step ):
   # necessary points
   # ====================
 def add_torus( points, cx, cy, cz, r0, r1, step ):
-    pass
-
-
+    torus = generate_torus(points, cx, cy, cz, r0, r1, step)
+    for column in torus:
+        add_edge(points, column[0], column[1], column[2], column[0]+1, column[1]+1, column[2]+1)
 
 def add_circle( points, cx, cy, cz, r, step ):
     x0 = r + cx
@@ -113,94 +139,7 @@ def add_edge( matrix, x0, y0, z0, x1, y1, z1 ):
 def add_point( matrix, x, y, z=0 ):
     matrix.append( [x, y, z, 1] )
 
-#test box mesh
-box
-0 0 0 200 100 400
-ident
-rotate
-x 20
-rotate
-y 20
-move
-150 200 0
-apply
-display
-#clear the edge matrix, test the sphere
-clear
-sphere
-0 0 0 200
-display
-#rotate 90 degrees about y to check lines
-ident
-rotate
-y 90
-move
-250 250 0
-apply
-display
-#reset sphere, rotate 90 degrees about x to check lines
-ident
-move
--250 -250 0
-rotate
-y -90
-rotate
-x 90
-move
-250 250 0
-apply
-display
-#reset sphere, rotate to make it look cool
-ident
-move
--250 -250 0
-rotate
-x -60
-rotate
-y 20
-rotate
-z 70
-move
-250 250 0
-apply
-display
-#clear the edge matrix, test torus
-clear
-torus
-0 0 0 25 150
-display
-#rotate 90 degrees about y to check lines
-ident
-rotate
-y 90
-move
-250 250 0
-apply
-display
-#reset torus, rotate 90 degrees about x to check lines
-ident
-move
--250 -250 0
-rotate
-y -90
-rotate
-x 90
-move
-250 250 0
-apply
-display
-#reset torus, rotate to make it look cool
-ident
-move
--250 -250 0
-rotate
-x 70
-rotate
-y 20
-move
-250 250 0
-apply
-display
+
 
 
 def draw_line( x0, y0, x1, y1, screen, color ):
